@@ -163,7 +163,6 @@ export class PromptProvider implements vscode.InlineCompletionItemProvider {
                             endpoint: inferenceConfig.endpoint,
                             bearerToken: inferenceConfig.bearerToken,
                             model: inferenceConfig.modelName,
-                            format: inferenceConfig.modelFormat,
                             maxLines: inferenceConfig.maxLines,
                             maxTokens: inferenceConfig.maxTokens,
                             temperature: inferenceConfig.temperature,

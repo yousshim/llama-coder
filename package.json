@@ -83,37 +83,6 @@
           },
           "inference.model": {
             "type": "string",
-            "enum": [
-              "stable-code:3b-code-q4_0",
-              "codellama:7b-code-q4_K_S",
-              "codellama:7b-code-q4_K_M",
-              "codellama:7b-code-q6_K",
-              "codellama:7b-code-fp16",
-              "codellama:13b-code-q4_K_S",
-              "codellama:13b-code-q4_K_M",
-              "codellama:13b-code-q6_K",
-              "codellama:13b-code-fp16",
-              "codellama:34b-code-q4_K_S",
-              "codellama:34b-code-q4_K_M",
-              "codellama:34b-code-q6_K",
-              "codellama:70b-code-q4_K_S",
-              "codellama:70b-code-q4_K_M",
-              "codellama:70b-code-q6_K",
-              "codellama:70b-code-fp16",
-              "deepseek-coder:1.3b-base-q4_0",
-              "deepseek-coder:1.3b-base-q4_1",
-              "deepseek-coder:1.3b-base-q8_0",
-              "deepseek-coder:6.7b-base-q4_K_S",
-              "deepseek-coder:6.7b-base-q4_K_M",
-              "deepseek-coder:6.7b-base-q5_K_S",
-              "deepseek-coder:6.7b-base-q5_K_M",
-              "deepseek-coder:6.7b-base-q8_0",
-              "deepseek-coder:6.7b-base-fp16",
-              "deepseek-coder:33b-base-q4_K_S",
-              "deepseek-coder:33b-base-q4_K_M",
-              "deepseek-coder:33b-base-fp16",
-              "custom"
-            ],
             "default": "stable-code:3b-code-q4_0",
             "description": "Inference model to use",
             "order": 2
@@ -123,23 +92,6 @@
             "default": 0.2,
             "description": "Temperature of the model. Increasing the temperature will make the model answer more creatively.",
             "order": 3
-          },
-          "inference.custom.model": {
-            "type": "string",
-            "default": "",
-            "description": "Custom model name",
-            "order": 4
-          },
-          "inference.custom.format": {
-            "type": "string",
-            "enum": [
-              "stable-code",
-              "codellama",
-              "deepseek"
-            ],
-            "default": "stable-code",
-            "description": "Custom model prompt format",
-            "order": 5
           },
           "inference.maxLines": {
             "type": "number",
