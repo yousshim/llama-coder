@@ -4,8 +4,6 @@ import { autocomplete } from './autocomplete';
 import { preparePrompt } from './preparePrompt';
 import { AsyncLock } from '../modules/lock';
 import { isNotNeeded, isSupported } from './filter';
-import { ollamaCheckModel } from '../modules/ollamaCheckModel';
-import { ollamaDownloadModel } from '../modules/ollamaDownloadModel';
 import { config } from '../config';
 
 type Status = {
@@ -104,42 +102,12 @@ export class PromptProvider implements vscode.InlineCompletionItemProvider {
                 // Result
                 let res: string | null = null;
 
-                    // Config
-                    let inferenceConfig = config.inference;
+                // Config
+                let inferenceConfig = config.inference;
 
-                    // Update status
-                    this.update('sync~spin', 'Llama Coder');
-                    try {
-
-                        // Check model exists
-                        let modelExists = await ollamaCheckModel(inferenceConfig.endpoint, inferenceConfig.modelName, inferenceConfig.bearerToken);
-                        if (token.isCancellationRequested) {
-                            info(`Canceled after AI completion.`);
-                            return;
-                        }
-
-                        // Download model if not exists
-                        if (!modelExists) {
-
-                        // Check if user asked to ignore download
-                        if (this.context.globalState.get('llama-coder-download-ignored') === inferenceConfig.modelName) {
-                            info(`Ingoring since user asked to ignore download.`);
-                            return;
-                        }
-
-                        // Ask for download
-                        let download = await vscode.window.showInformationMessage(`Model ${inferenceConfig.modelName} is not downloaded. Do you want to download it? Answering "No" would require you to manually download model.`, 'Yes', 'No');
-                        if (download === 'No') {
-                            info(`Ingoring since user asked to ignore download.`);
-                            this.context.globalState.update('llama-coder-download-ignored', inferenceConfig.modelName);
-                            return;
-                        }
-
-                        // Perform download
-                        this.update('sync~spin', 'Downloading');
-                        await ollamaDownloadModel(inferenceConfig.endpoint, inferenceConfig.modelName, inferenceConfig.bearerToken);
-                        this.update('sync~spin', 'Llama Coder');
-                    }
+                // Update status
+                this.update('sync~spin', 'Llama Coder');
+                try {
                     if (token.isCancellationRequested) {
                         info(`Canceled after AI completion.`);
                         return;
@@ -159,9 +127,9 @@ export class PromptProvider implements vscode.InlineCompletionItemProvider {
                         canceled: () => token.isCancellationRequested,
                     });
                     info(`AI completion completed: ${res}`);
-                    } finally {
-                        this.update('chip', 'Llama Coder');
-                    }
+                } finally {
+                    this.update('chip', 'Llama Coder');
+                }
                 if (token.isCancellationRequested) {
                     info(`Canceled after AI completion.`);
                     return;
