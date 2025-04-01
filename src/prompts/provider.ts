@@ -3,7 +3,6 @@ import { info, warn } from '../modules/log';
 import { autocomplete } from './autocomplete';
 import { preparePrompt } from './preparePrompt';
 import { AsyncLock } from '../modules/lock';
-import { getFromPromptCache, setPromptToCache } from './promptCache';
 import { isNotNeeded, isSupported } from './filter';
 import { ollamaCheckModel } from '../modules/ollamaCheckModel';
 import { ollamaDownloadModel } from '../modules/ollamaDownloadModel';
@@ -105,15 +104,6 @@ export class PromptProvider implements vscode.InlineCompletionItemProvider {
                 // Result
                 let res: string | null = null;
 
-                // Check if in cache
-                let cached = getFromPromptCache({
-                    prefix: prepared.prefix,
-                    suffix: prepared.suffix
-                });
-
-                // If not cached
-                if (cached === undefined) {
-
                     // Config
                     let inferenceConfig = config.inference;
 
@@ -131,59 +121,47 @@ export class PromptProvider implements vscode.InlineCompletionItemProvider {
                         // Download model if not exists
                         if (!modelExists) {
 
-                            // Check if user asked to ignore download
-                            if (this.context.globalState.get('llama-coder-download-ignored') === inferenceConfig.modelName) {
-                                info(`Ingoring since user asked to ignore download.`);
-                                return;
-                            }
-
-                            // Ask for download
-                            let download = await vscode.window.showInformationMessage(`Model ${inferenceConfig.modelName} is not downloaded. Do you want to download it? Answering "No" would require you to manually download model.`, 'Yes', 'No');
-                            if (download === 'No') {
-                                info(`Ingoring since user asked to ignore download.`);
-                                this.context.globalState.update('llama-coder-download-ignored', inferenceConfig.modelName);
-                                return;
-                            }
-
-                            // Perform download
-                            this.update('sync~spin', 'Downloading');
-                            await ollamaDownloadModel(inferenceConfig.endpoint, inferenceConfig.modelName, inferenceConfig.bearerToken);
-                            this.update('sync~spin', 'Llama Coder');
-                        }
-                        if (token.isCancellationRequested) {
-                            info(`Canceled after AI completion.`);
+                        // Check if user asked to ignore download
+                        if (this.context.globalState.get('llama-coder-download-ignored') === inferenceConfig.modelName) {
+                            info(`Ingoring since user asked to ignore download.`);
                             return;
                         }
 
-                        // Run AI completion
-                        info(`Running AI completion...`);
-                        res = await autocomplete({
-                            prefix: prepared.prefix,
-                            suffix: prepared.suffix,
-                            endpoint: inferenceConfig.endpoint,
-                            bearerToken: inferenceConfig.bearerToken,
-                            model: inferenceConfig.modelName,
-                            maxLines: inferenceConfig.maxLines,
-                            maxTokens: inferenceConfig.maxTokens,
-                            temperature: inferenceConfig.temperature,
-                            canceled: () => token.isCancellationRequested,
-                        });
-                        info(`AI completion completed: ${res}`);
+                        // Ask for download
+                        let download = await vscode.window.showInformationMessage(`Model ${inferenceConfig.modelName} is not downloaded. Do you want to download it? Answering "No" would require you to manually download model.`, 'Yes', 'No');
+                        if (download === 'No') {
+                            info(`Ingoring since user asked to ignore download.`);
+                            this.context.globalState.update('llama-coder-download-ignored', inferenceConfig.modelName);
+                            return;
+                        }
 
-                        // Put to cache
-                        setPromptToCache({
-                            prefix: prepared.prefix,
-                            suffix: prepared.suffix,
-                            value: res
-                        });
+                        // Perform download
+                        this.update('sync~spin', 'Downloading');
+                        await ollamaDownloadModel(inferenceConfig.endpoint, inferenceConfig.modelName, inferenceConfig.bearerToken);
+                        this.update('sync~spin', 'Llama Coder');
+                    }
+                    if (token.isCancellationRequested) {
+                        info(`Canceled after AI completion.`);
+                        return;
+                    }
+
+                    // Run AI completion
+                    info(`Running AI completion...`);
+                    res = await autocomplete({
+                        prefix: prepared.prefix,
+                        suffix: prepared.suffix,
+                        endpoint: inferenceConfig.endpoint,
+                        bearerToken: inferenceConfig.bearerToken,
+                        model: inferenceConfig.modelName,
+                        maxLines: inferenceConfig.maxLines,
+                        maxTokens: inferenceConfig.maxTokens,
+                        temperature: inferenceConfig.temperature,
+                        canceled: () => token.isCancellationRequested,
+                    });
+                    info(`AI completion completed: ${res}`);
                     } finally {
                         this.update('chip', 'Llama Coder');
                     }
-                } else {
-                    if (cached !== null) {
-                        res = cached;
-                    }
-                }
                 if (token.isCancellationRequested) {
                     info(`Canceled after AI completion.`);
                     return;
