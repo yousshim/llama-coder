@@ -1,6 +1,9 @@
-import { ollamaTokenGenerator } from '../modules/ollamaTokenGenerator';
-import { countSymbol } from '../modules/text';
-import { info } from '../modules/log';
+import { makeOllamaRequest } from "../modules/ollamaRequest";
+
+type OllamaToken = {
+    model: string,
+    response: string,
+};
 
 export async function autocomplete(args: {
     endpoint: string,
@@ -20,30 +23,27 @@ export async function autocomplete(args: {
         prompt: args.prefix,
         suffix: args.suffix,
         raw: true,
+        stream: false,
         options: {
             num_predict: args.maxTokens,
             temperature: args.temperature
         }
     };
 
-    // Receiving tokens
-    let res = '';
-    let totalLines = 1;
-    for await (let tokens of ollamaTokenGenerator(args.endpoint + '/api/generate', data, args.bearerToken)) {
+    const res = await makeOllamaRequest(args.endpoint + '/api/generate', data, args.bearerToken);
+    try {
+        const tokens =  JSON.parse(res) as OllamaToken;
         if (args.canceled && args.canceled()) {
-            break;
+            return "";
         }
-
-        res = res + tokens.response;
-
-        // Update total lines
-        totalLines += countSymbol(tokens.response, '\n');
-        // Break if too many lines and on top level
-        if (totalLines > args.maxLines) {
-            info('Too many lines, breaking.');
-            break;
-        }
+        const response = tokens.response;
+        
+        // take only args.maLines lines from the response
+        let lines = response.split('\n');
+        lines = lines.slice(0, args.maxLines);
+        return lines.join('\n');
+    } catch (e) { 
+        console.warn('Receive wrong line: ' + res);
+        return "";
     }
-
-    return res;
 }
